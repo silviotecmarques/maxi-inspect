@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maxi Inspect - Admin</title>
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #005696 0%, #002d50 100%); display: flex; justify-content: center; align-items: center; height: 100vh; }
+        .admin-card { background: white; padding: 40px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); width: 100%; max-width: 350px; text-align: center; }
+        .admin-card h2 { color: #333; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; background: #005696; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; font-weight: bold; }
+        button:hover { background: #003d6b; }
+        #msg { color: red; margin-top: 10px; font-size: 14px; }
+    </style>
+</head>
+<body>
+    <div class="admin-card">
+        <h2>🛡️ Painel Gestor</h2>
+        <input type="email" id="email" placeholder="Seu e-mail administrativo">
+        <input type="password" id="pass" placeholder="Sua senha (PIN)">
+        <button onclick="logarAdmin()">Acessar Painel</button>
+        <div id="msg"></div>
+    </div>
+
+    <script>
+        async function logarAdmin() {
+            const email = document.getElementById('email').value;
+            const pin = document.getElementById('pass').value;
+            const res = await fetch('http://localhost:3000/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, pin })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                localStorage.setItem('maxi_token', data.token);
+                window.location.href = `../pages/${data.user.role.toLowerCase()}.html`;
+            } else {
+                document.getElementById('msg').innerText = "Acesso negado!";
+            }
+        }
+    </script>
+</body>
+</html>
