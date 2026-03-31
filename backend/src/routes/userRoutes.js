@@ -62,5 +62,19 @@ router.post('/convidar', auth, async (req, res) => {
     }
 });
 });
+router.get('/status-convites', auth, async (req, res) => {
+    try {
+        const status = await db.query(
+            `SELECT u.nome, u.email, u.role, u.ativo, i.expira_em, i.usado 
+             FROM users u 
+             LEFT JOIN user_invites i ON u.id = i.user_id 
+             WHERE u.empresa_id = $1`, 
+            [req.empresaId]
+        );
+        res.json(status.rows);
+    } catch (err) {
+        res.status(500).json({ erro: "Erro ao buscar status" });
+    }
+});
 
 module.exports = router;
