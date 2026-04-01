@@ -31,7 +31,7 @@ router.post('/enviar', auth, async (req, res) => {
             dados: novaExecucao.rows[0] 
         });
     } catch (err) {
-        console.error(err);
+        console.error("Erro no envio do FotoCheck:", err);
         res.status(500).json({ erro: "Erro ao processar execução." });
     }
 });
@@ -67,8 +67,50 @@ router.get('/relatorio', auth, async (req, res) => {
         const result = await db.query(query, params);
         res.json(result.rows);
     } catch (err) {
-        console.error(err);
+        console.error("Erro no relatório:", err);
         res.status(500).json({ erro: "Erro ao gerar relatório de execuções." });
+    }
+});
+
+// 1. O RADAR: Busca todas as missões pendentes de auditoria da empresa
+router.get('/pendentes', auth, async (req, res) => {
+    try {
+        const query = `
+            SELECT e.id, e.foto_url, e.observacao, e.criado_em as data_execucao,
+                   t.descricao as tarefa_descricao, u.nome as promotor
+            FROM execucoes e
+            JOIN tarefas t ON e.tarefa_id = t.id
+            JOIN users u ON t.usuario_id = u.id
+            WHERE e.status = 'pendente' AND t.empresa_id = $1
+            ORDER BY e.criado_em ASC
+        `;
+        // Padronizado para req.empresaId para evitar quebra no middleware
+        const result = await db.query(query, [req.empresaId]);
+        res.json(result.rows);
+    } catch (err) {
+        console.error("Erro no Radar de Auditoria:", err);
+        res.status(500).json({ erro: "Erro ao buscar operações pendentes." });
+    }
+});
+
+// 2. O JULGAMENTO: Aprova ou Reprova a execução
+router.post('/:id/avaliar', auth, async (req, res) => {
+    const { id } = req.params;
+    const { status, motivo } = req.body;
+
+    if (!['aprovado', 'reprovado'].includes(status)) {
+        return res.status(400).json({ erro: "Status de auditoria inválido." });
+    }
+
+    try {
+        await db.query(
+            'UPDATE execucoes SET status = $1, motivo_reprovacao = $2 WHERE id = $3',
+            [status, status === 'reprovado' ? motivo : null, id]
+        );
+        res.json({ mensagem: `Operação marcada como ${status.toUpperCase()}!` });
+    } catch (err) {
+        console.error("Erro no Julgamento:", err);
+        res.status(500).json({ erro: "Falha ao registar auditoria." });
     }
 });
 

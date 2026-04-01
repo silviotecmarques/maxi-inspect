@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="pt-pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MaxiInspect - Mesa de Auditoria</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
+        .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+        .card { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; overflow: hidden; display: flex; flex-direction: column; }
+        .card img { width: 100%; height: 250px; object-fit: cover; background: #000; }
+        .card-content { padding: 15px; flex-grow: 1; }
+        .tag { font-size: 12px; background: #005696; padding: 3px 8px; border-radius: 4px; color: white; }
+        .actions { display: flex; border-top: 1px solid #333; }
+        .btn { flex: 1; padding: 15px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-approve { background: #1b5e20; color: white; }
+        .btn-approve:hover { background: #2e7d32; }
+        .btn-reject { background: #b71c1c; color: white; }
+        .btn-reject:hover { background: #c62828; }
+        .empty-state { text-align: center; padding: 50px; color: #666; font-size: 1.2rem; }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h2>🛡️ Auditoria Tática de Execuções</h2>
+        <p>Aprova ou reprova as provas fotográficas recolhidas no terreno.</p>
+    </div>
+
+    <div id="painel-auditoria" class="grid">
+        </div>
+
+    <script>
+        const token = localStorage.getItem('maxi_token');
+        if (!token) window.location.href = '../index.html'; // Proteção básica
+
+        async function carregarPendentes() {
+            const painel = document.getElementById('painel-auditoria');
+            painel.innerHTML = '<p>A pesquisar no radar...</p>';
+
+            try {
+                const res = await fetch('http://localhost:3000/execucoes/pendentes', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                const execucoes = await res.json();
+                painel.innerHTML = '';
+
+                if (execucoes.length === 0) {
+                    painel.innerHTML = '<div class="empty-state">Nenhuma execução pendente. O terreno está limpo.</div>';
+                    return;
+                }
+
+                execucoes.forEach(exec => {
+                    const dataFormatada = new Date(exec.data_execucao).toLocaleString('pt-PT');
+                    const card = `
+                        <div class="card" id="card-${exec.id}">
+                            <img src="${exec.foto_url}" alt="Prova do Promotor">
+                            <div class="card-content">
+                                <h3>${exec.tarefa_descricao}</h3>
+                                <p><span class="tag">Promotor: ${exec.promotor}</span></p>
+                                <p><small>Data: ${dataFormatada}</small></p>
+                                <p><strong>Obs:</strong> ${exec.observacao || 'Nenhuma observação.'}</p>
+                            </div>
+                            <div class="actions">
+                                <button class="btn btn-reject" onclick="julgar(${exec.id}, 'reprovado')">REPROVAR</button>
+                                <button class="btn btn-approve" onclick="julgar(${exec.id}, 'aprovado')">APROVAR</button>
+                            </div>
+                        </div>
+                    `;
+                    painel.innerHTML += card;
+                });
+            } catch (err) {
+                alert("Falha na comunicação com o servidor.");
+            }
+        }
+
+        async function julgar(id, status) {
+            let motivo = '';
+            if (status === 'reprovado') {
+                motivo = prompt("Motivo da reprovação (Ex: Foto desfocada, Produto errado):");
+                if (motivo === null) return; // O gestor cancelou a reprovação
+            }
+
+            try {
+                const res = await fetch(`http://localhost:3000/execucoes/${id}/avaliar`, {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}` 
+                    },
+                    body: JSON.stringify({ status, motivo })
+                });
+
+                if (res.ok) {
+                    document.getElementById(`card-${id}`).style.display = 'none'; // Remove o cartão do ecrã
+                } else {
+                    alert("Erro ao registar o julgamento.");
+                }
+            } catch (err) {
+                alert("Erro de rede ao enviar a decisão.");
+            }
+        }
+
+        // Inicia o processo assim que a página carrega
+        carregarPendentes();
+    </script>
+</body>
+</html>
