@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Cadastro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h2>Finalizar Cadastro</h2>
+
+<p id="info"></p>
+
+<input id="nome" placeholder="Seu nome"><br>
+<input id="senha" type="password" placeholder="Crie uma senha"><br>
+
+<button onclick="cadastrar()">Finalizar Cadastro</button>
+
+<script src="js/api.js"></script>
+
+<script>
+// =========================================
+// PEGAR TOKEN DA URL
+// =========================================
+const urlParams = new URLSearchParams(window.location.search);
+const token = urlParams.get("token");
+
+// Mostrar info
+document.getElementById("info").innerText =
+  "Convite válido. Complete seus dados.";
+
+// =========================================
+// CADASTRAR
+// =========================================
+async function cadastrar() {
+  const nome = document.getElementById("nome").value;
+  const senha = document.getElementById("senha").value;
+
+  if (!nome || !senha) {
+    alert("Preencha todos os campos");
+    return;
+  }
+
+  const res = await fetch(`${API}/convites/cadastro`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      token,
+      nome,
+      senha
+    })
+  });
+
+  const data = await res.json();
+
+  if (res.ok) {
+    alert(`Cadastro concluído!\nSeu PIN: ${data.pin}`);
+
+    // 🔥 já manda pro login
+    window.location.href = "login.html";
+
+  } else {
+    alert(data.erro);
+  }
+}
+</script>
+
+</body>
+</html>

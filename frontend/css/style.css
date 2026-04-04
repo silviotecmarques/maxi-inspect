@@ -1,35 +1,74 @@
 body {
   font-family: Arial;
-  background: #111;
+  background: #0f172a;
   color: #fff;
+  margin: 0;
+}
+
+/* TOPO */
+header {
+  background: #020617;
+  padding: 15px;
+  text-align: center;
+  font-size: 20px;
+}
+
+/* LAYOUT */
+.container {
+  display: flex;
+}
+
+/* MENU LATERAL */
+.sidebar {
+  width: 200px;
+  background: #020617;
+  height: 100vh;
+  padding: 10px;
+}
+
+.sidebar button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  background: transparent;
+  color: white;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+}
+
+.sidebar button:hover {
+  background: #1e293b;
+}
+
+/* CONTEUDO */
+.content {
+  flex: 1;
   padding: 20px;
 }
 
-input {
-  padding: 10px;
-  margin: 5px;
+/* CARD */
+.card {
+  background: #1e293b;
+  padding: 15px;
+  margin: 10px 0;
+  border-radius: 10px;
 }
 
+/* BOTÕES */
 button {
-  padding: 10px;
+  padding: 8px 12px;
   margin: 5px;
-  background: #00c853;
   border: none;
+  background: #22c55e;
   color: white;
   cursor: pointer;
 }
 
-.card {
-  background: #222;
-  padding: 15px;
-  margin: 10px 0;
-  border-radius: 8px;
-}
-
+/* STATUS */
 .status {
   padding: 5px 10px;
   border-radius: 5px;
-  font-weight: bold;
 }
 
 .pendente { background: orange; }
