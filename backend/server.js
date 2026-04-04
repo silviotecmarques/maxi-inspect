@@ -8,6 +8,10 @@ const userRoutes = require('./src/routes/userRoutes')
 const pvdRoutes = require('./src/routes/pvdRoutes');
 const tarefaRoutes = require('./src/routes/tarefaRoutes');
 const execucaoRoutes = require('./src/routes/execucaoRoutes');
+const dashboardRoutes = require('./src/routes/dashboardRoutes');
+const conviteRoutes = require('./src/routes/conviteRoutes');
+
+app.use('/uploads', express.static('uploads'));
 
 const app = express();
 
@@ -20,6 +24,8 @@ app.use('/usuarios', userRoutes);
 app.use('/pvd', pvdRoutes);
 app.use('/tarefas', tarefaRoutes);
 app.use('/execucoes', execucaoRoutes);
+app.use('/dashboard', dashboardRoutes); 
+app.use('/convites', conviteRoutes);
 
 // Rota de teste
 app.get('/', async (req, res) => {
