@@ -1,11 +1,11 @@
 let userTemp = null;
 
 async function login() {
-  const pin = document.getElementById('pin').value;
+  const pin = document.getElementById("pin").value;
 
   const res = await fetch(`${API}/auth/login-pin`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {"Content-Type": "application/json"},
     body: JSON.stringify({ pin })
   });
 
@@ -17,33 +17,24 @@ async function login() {
     return;
   }
 
-  finalizarLogin(data);
+  salvarLogin(data);
 }
 
 async function enviarSenha() {
-  const senha = document.getElementById('senha').value;
+  const senha = document.getElementById("senha").value;
 
   const res = await fetch(`${API}/auth/login-senha`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      userId: userTemp,
-      senha
-    })
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ userId: userTemp, senha })
   });
 
   const data = await res.json();
-
-  finalizarLogin(data);
+  salvarLogin(data);
 }
 
-function finalizarLogin(data) {
+function salvarLogin(data) {
   localStorage.setItem("token", data.token);
   localStorage.setItem("user", JSON.stringify(data.usuario));
-
-  if (data.usuario.role === "PROMOTOR") {
-    window.location.href = "promotor.html";
-  } else {
-    window.location.href = "dashboard.html";
-  }
+  iniciar();
 }

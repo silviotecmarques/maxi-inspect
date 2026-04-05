@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const verificarRole = require('../middlewares/authMiddleware');
+const { verificarToken, verificarRole } = require('../middlewares/authMiddleware');
 const multer = require('multer');
 const path = require('path');
 

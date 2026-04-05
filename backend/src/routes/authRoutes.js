@@ -23,15 +23,14 @@ router.post('/login-pin', async (req, res) => {
 
     const user = result.rows[0];
 
-    // 🔥 Se for supervisor → pede senha
-    if (user.role === 'SUPERVISOR') {
+    // 🔥 MASTER e SUPERVISOR sempre pedem senha
+    if (user.role === 'SUPERVISOR' || user.role === 'MASTER') {
       return res.json({
         precisaSenha: true,
         userId: user.id
       });
     }
 
-    // 🔥 gera token direto
     const token = jwt.sign({
       id: user.id,
       role: user.role,
@@ -47,7 +46,7 @@ router.post('/login-pin', async (req, res) => {
 });
 
 // =========================================
-// LOGIN COM SENHA (SUPERVISOR)
+// LOGIN COM SENHA
 // =========================================
 router.post('/login-senha', async (req, res) => {
   try {
@@ -67,7 +66,8 @@ router.post('/login-senha', async (req, res) => {
     const token = jwt.sign({
       id: user.id,
       role: user.role,
-      empresa_id: user.empresa_id
+      empresa_id: user.empresa_id,
+      loja_id: user.loja_id
     }, SECRET);
 
     res.json({ token, usuario: user });
