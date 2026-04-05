@@ -1,5 +1,3 @@
-let userTemp = null;
-
 async function login() {
   const pin = document.getElementById("pin").value;
 
@@ -10,6 +8,11 @@ async function login() {
   });
 
   const data = await res.json();
+
+  if (!res.ok) {
+    alert(data.erro || "Erro no login");
+    return;
+  }
 
   if (data.precisaSenha) {
     userTemp = data.userId;
@@ -30,11 +33,11 @@ async function enviarSenha() {
   });
 
   const data = await res.json();
-  salvarLogin(data);
-}
 
-function salvarLogin(data) {
-  localStorage.setItem("token", data.token);
-  localStorage.setItem("user", JSON.stringify(data.usuario));
-  iniciar();
+  if (!res.ok) {
+    alert(data.erro || "Erro na senha");
+    return;
+  }
+
+  salvarLogin(data);
 }

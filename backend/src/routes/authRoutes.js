@@ -1,79 +1,79 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
-const jwt = require('jsonwebtoken');
 
-const SECRET = "maxi-secret";
-
-// =========================================
-// LOGIN POR PIN
-// =========================================
 router.post('/login-pin', async (req, res) => {
   try {
     const { pin } = req.body;
 
-    const result = await db.query(
-      `SELECT * FROM usuarios WHERE pin = $1`,
+    const user = await db.query(
+      'SELECT * FROM usuarios WHERE pin = $1',
       [pin]
     );
 
-    if (result.rows.length === 0) {
+    if (user.rows.length === 0) {
       return res.status(401).json({ erro: 'PIN inválido' });
     }
 
-    const user = result.rows[0];
+    const u = user.rows[0];
 
-    // 🔥 MASTER e SUPERVISOR sempre pedem senha
-    if (user.role === 'SUPERVISOR' || user.role === 'MASTER') {
+    if (u.role === 'MASTER' || u.role === 'SUPERVISOR') {
       return res.json({
         precisaSenha: true,
-        userId: user.id
+        userId: u.id
       });
     }
 
-    const token = jwt.sign({
-      id: user.id,
-      role: user.role,
-      empresa_id: user.empresa_id,
-      loja_id: user.loja_id
-    }, SECRET);
-
-    res.json({ token, usuario: user });
+    return res.json({
+      token: 'fake-token',
+      usuario: {
+        id: u.id,
+        nome: u.nome,
+        role: u.role,
+        empresa_id: u.empresa_id,
+        loja_id: u.loja_id
+      }
+    });
 
   } catch (err) {
-    res.status(500).json({ erro: "Erro login" });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no login PIN' });
   }
 });
 
-// =========================================
-// LOGIN COM SENHA
-// =========================================
 router.post('/login-senha', async (req, res) => {
   try {
     const { userId, senha } = req.body;
 
-    const result = await db.query(
-      `SELECT * FROM usuarios WHERE id = $1 AND senha = $2`,
-      [userId, senha]
+    const user = await db.query(
+      'SELECT * FROM usuarios WHERE id = $1',
+      [userId]
     );
 
-    if (result.rows.length === 0) {
-      return res.status(401).json({ erro: 'Senha inválida' });
+    if (user.rows.length === 0) {
+      return res.status(401).json({ erro: 'Usuário não encontrado' });
     }
 
-    const user = result.rows[0];
+    const u = user.rows[0];
 
-    const token = jwt.sign({
-      id: user.id,
-      role: user.role,
-      empresa_id: user.empresa_id,
-      loja_id: user.loja_id
-    }, SECRET);
+    if (u.senha !== senha) {
+      return res.status(401).json({ erro: 'Senha incorreta' });
+    }
 
-    res.json({ token, usuario: user });
+    return res.json({
+      token: 'fake-token',
+      usuario: {
+        id: u.id,
+        nome: u.nome,
+        role: u.role,
+        empresa_id: u.empresa_id,
+        loja_id: u.loja_id
+      }
+    });
 
   } catch (err) {
-    res.status(500).json({ erro: "Erro login" });
+    console.error(err);
+    res.status(500).json({ erro: 'Erro no login senha' });
   }
 });
 
