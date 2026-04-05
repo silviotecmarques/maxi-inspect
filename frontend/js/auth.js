@@ -1,9 +1,11 @@
+let userTemp = null;
+
 async function login() {
   const pin = document.getElementById("pin").value;
 
   const res = await fetch(`${API}/auth/login-pin`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ pin })
   });
 
@@ -28,7 +30,7 @@ async function enviarSenha() {
 
   const res = await fetch(`${API}/auth/login-senha`, {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId: userTemp, senha })
   });
 
@@ -40,4 +42,10 @@ async function enviarSenha() {
   }
 
   salvarLogin(data);
+}
+
+function salvarLogin(data) {
+  localStorage.setItem("token", data.token);
+  localStorage.setItem("user", JSON.stringify(data.user));
+  location.reload();
 }

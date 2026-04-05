@@ -21,11 +21,13 @@ const authRoutes = require('./src/routes/authRoutes');
 const tarefaRoutes = require('./src/routes/tarefaRoutes');
 const execucaoRoutes = require('./src/routes/execucaoRoutes');
 const conviteRoutes = require('./src/routes/conviteRoutes');
+const tradesRoutes = require('./src/routes/tradesRoutes');
 
 app.use('/auth', authRoutes);
 app.use('/tarefas', tarefaRoutes);
 app.use('/execucoes', execucaoRoutes);
 app.use('/convites', conviteRoutes);
+app.use('/trades', tradesRoutes);
 
 // =========================================
 // START
