@@ -28,6 +28,7 @@ app.use('/tarefas', tarefaRoutes);
 app.use('/execucoes', execucaoRoutes);
 app.use('/convites', conviteRoutes);
 app.use('/trades', tradesRoutes);
+app.use('/uploads', express.static('uploads'));
 
 // =========================================
 // START

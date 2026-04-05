@@ -11,21 +11,24 @@ exports.listar = async (req, res) => {
   }
 };
 
-// CRIAR
+// CRIAR COM UPLOAD
 exports.criar = async (req, res) => {
   try {
     const { titulo, loja_id, status, data_limite } = req.body;
 
+    const imagem = req.file ? req.file.filename : null;
+
     const result = await db.query(
-      `INSERT INTO trades (titulo, loja_id, status, data_limite)
-       VALUES ($1, $2, $3, $4)
+      `INSERT INTO trades (titulo, loja_id, status, data_limite, imagem)
+       VALUES ($1, $2, $3, $4, $5)
        RETURNING *`,
-      [titulo, loja_id, status, data_limite]
+      [titulo, loja_id, status, data_limite, imagem]
     );
 
     res.json(result.rows[0]);
+
   } catch (err) {
-    console.error(err);
+    console.error("ERRO NO BACKEND:", err);
     res.status(500).json({ erro: 'Erro ao criar trade' });
   }
 };

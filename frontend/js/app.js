@@ -2,27 +2,9 @@ function render(html) {
   document.getElementById("app").innerHTML = html;
 }
 
-function telaLogin() {
-  return `
-    <div style="padding:40px">
-      <h2>Login</h2>
-
-      <input id="pin" placeholder="PIN">
-
-      <div id="senhaDiv" style="display:none">
-        <input id="senha" placeholder="Senha">
-        <button id="btnSenha">Entrar</button>
-      </div>
-
-      <button id="btnLogin">Entrar com PIN</button>
-    </div>
-  `;
-}
-
 function telaDashboard() {
   return `
     <div style="display:flex">
-
       <div style="width:200px; background:#111; color:#fff; height:100vh; padding:20px">
         <h3>Maxi Inspect</h3>
         <button id="logoutBtn">Sair</button>
@@ -33,16 +15,14 @@ function telaDashboard() {
 
         <button id="btnNovoTrade">+ Criar Trade</button>
 
-        <!-- FORM -->
         <div id="formTrade" style="display:none; margin-top:20px;">
           <input id="tituloTrade" placeholder="Nome do trade"><br><br>
-          <input id="dataTrade" type="date"><br><br>
+          <input id="imagemTrade" type="file"><br><br>
           <button id="salvarTrade">Salvar</button>
         </div>
 
-        <div id="listaTrades" style="margin-top:20px">Carregando...</div>
+        <div id="listaTrades">Carregando...</div>
       </div>
-
     </div>
   `;
 }
@@ -53,7 +33,16 @@ async function carregarTrades() {
       headers: getHeaders()
     });
 
-    const data = await res.json();
+    let data = [];
+
+    try {
+      data = await res.json();
+    } catch (e) {
+      console.error("Erro JSON:", e);
+      document.getElementById("listaTrades").innerHTML =
+        "Erro no retorno da API";
+      return;
+    }
 
     if (!data || data.length === 0) {
       document.getElementById("listaTrades").innerHTML =
@@ -65,7 +54,11 @@ async function carregarTrades() {
       <div style="border:1px solid #ccc; padding:10px; margin-bottom:10px">
         <strong>${trade.titulo}</strong><br>
         Status: ${trade.status}<br>
-        Data: ${trade.data_limite}
+        ${
+          trade.imagem
+            ? `<img src="${API}/uploads/${trade.imagem}" width="150">`
+            : ''
+        }
       </div>
     `).join("");
 
@@ -77,63 +70,57 @@ async function carregarTrades() {
 }
 
 function iniciar() {
-  const user = JSON.parse(localStorage.getItem("user"));
-
-  if (!user) {
-    render(telaLogin());
-
-    setTimeout(() => {
-      document.getElementById("btnLogin").addEventListener("click", login);
-      document.getElementById("btnSenha").addEventListener("click", enviarSenha);
-    }, 0);
-
-    return;
-  }
-
   render(telaDashboard());
 
   setTimeout(() => {
-    document.getElementById("logoutBtn").addEventListener("click", logout);
-
     document.getElementById("btnNovoTrade").addEventListener("click", () => {
       document.getElementById("formTrade").style.display = "block";
     });
 
     document.getElementById("salvarTrade").addEventListener("click", criarTrade);
-
   }, 0);
 
   carregarTrades();
 }
 
-function logout() {
-  localStorage.clear();
-  location.reload();
-}
-
 async function criarTrade() {
   const titulo = document.getElementById("tituloTrade").value;
-  const data = document.getElementById("dataTrade").value;
+  const fileInput = document.getElementById("imagemTrade");
 
   if (!titulo) {
     alert("Digite o nome do trade");
     return;
   }
 
+  const formData = new FormData();
+  formData.append("titulo", titulo);
+  formData.append("loja_id", 1);
+  formData.append("status", "pendente");
+  formData.append("data_limite", "2026-04-10");
+
+  if (fileInput.files[0]) {
+    formData.append("imagem", fileInput.files[0]);
+  }
+
   try {
     const res = await fetch(`${API}/trades`, {
       method: "POST",
-      headers: getHeaders(),
-      body: JSON.stringify({
-        titulo,
-        loja_id: 1,
-        status: "pendente",
-        data_limite: data || "2026-04-10"
-      })
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("token")
+      },
+      body: formData
     });
 
+    let data;
+    try {
+      data = await res.json();
+    } catch (e) {
+      alert("Erro no retorno do servidor");
+      return;
+    }
+
     if (!res.ok) {
-      alert("Erro ao criar trade");
+      alert(data.erro || "Erro ao criar trade");
       return;
     }
 
@@ -141,6 +128,7 @@ async function criarTrade() {
 
     document.getElementById("formTrade").style.display = "none";
     document.getElementById("tituloTrade").value = "";
+    document.getElementById("imagemTrade").value = "";
 
     carregarTrades();
 
