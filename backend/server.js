@@ -22,13 +22,19 @@ const tarefaRoutes = require('./src/routes/tarefaRoutes');
 const execucaoRoutes = require('./src/routes/execucaoRoutes');
 const conviteRoutes = require('./src/routes/conviteRoutes');
 const tradesRoutes = require('./src/routes/tradesRoutes');
+const lojasRoutes = require('./src/routes/lojasRoutes');
+const pontosRoutes = require('./src/routes/pontosRoutes');
+const masterRoutes = require('./src/routes/masterRoutes');
 
 app.use('/auth', authRoutes);
 app.use('/tarefas', tarefaRoutes);
 app.use('/execucoes', execucaoRoutes);
 app.use('/convites', conviteRoutes);
 app.use('/trades', tradesRoutes);
+app.use('/lojas', lojasRoutes);
 app.use('/uploads', express.static('uploads'));
+app.use('/pontos', pontosRoutes);
+app.use('/master', masterRoutes);
 
 // =========================================
 // START
