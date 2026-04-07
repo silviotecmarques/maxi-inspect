@@ -1,10 +1,7 @@
 const jwt = require('jsonwebtoken');
 
-const SECRET = "maxi-secret"; // depois vamos proteger isso
+const SECRET = process.env.JWT_SECRET || "maxi-secret";
 
-// =========================================
-// VERIFICAR TOKEN
-// =========================================
 function verificarToken(req, res, next) {
   const authHeader = req.headers.authorization;
 
@@ -12,25 +9,41 @@ function verificarToken(req, res, next) {
     return res.status(401).json({ erro: "Token não enviado" });
   }
 
-  const token = authHeader.split(' ')[1];
+  const parts = authHeader.split(' ');
+
+  if (parts.length !== 2) {
+    return res.status(401).json({ erro: "Token mal formatado" });
+  }
+
+  const [scheme, token] = parts;
+
+  if (!/^Bearer$/i.test(scheme)) {
+    return res.status(401).json({ erro: "Token mal formatado" });
+  }
 
   try {
     const decoded = jwt.verify(token, SECRET);
-    req.user = decoded; // 🔥 agora temos o usuário na requisição
+
+    if (!decoded.id || !decoded.role || !decoded.empresa_id) {
+      return res.status(401).json({ erro: "Token inválido" });
+    }
+
+    req.user = decoded;
+
     next();
   } catch (err) {
+    console.error("Erro no token:", err.message);
     return res.status(401).json({ erro: "Token inválido" });
   }
 }
 
-// =========================================
-// VERIFICAR ROLE
-// =========================================
 function verificarRole(rolesPermitidas) {
   return (req, res, next) => {
-    const role = req.user.role;
+    if (!req.user || !req.user.role) {
+      return res.status(403).json({ erro: "Acesso negado" });
+    }
 
-    if (!rolesPermitidas.includes(role)) {
+    if (!rolesPermitidas.includes(req.user.role)) {
       return res.status(403).json({ erro: "Acesso negado" });
     }
 

@@ -1,5 +1,8 @@
 let userTemp = null;
 
+// =========================================
+// LOGIN COM PIN
+// =========================================
 async function login() {
   const pin = document.getElementById("pin").value;
 
@@ -16,6 +19,7 @@ async function login() {
     return;
   }
 
+  // Se precisar senha (Supervisor/Master)
   if (data.precisaSenha) {
     userTemp = data.userId;
     document.getElementById("senhaDiv").style.display = "block";
@@ -25,6 +29,9 @@ async function login() {
   salvarLogin(data);
 }
 
+// =========================================
+// LOGIN COM SENHA
+// =========================================
 async function enviarSenha() {
   const senha = document.getElementById("senha").value;
 
@@ -44,8 +51,19 @@ async function enviarSenha() {
   salvarLogin(data);
 }
 
+// =========================================
+// SALVAR LOGIN (🔥 CORRIGIDO)
+// =========================================
 function salvarLogin(data) {
+  if (!data.token) {
+    alert("Erro: token não recebido");
+    return;
+  }
+
   localStorage.setItem("token", data.token);
-  localStorage.setItem("user", JSON.stringify(data.user));
+  localStorage.setItem("usuario", JSON.stringify(data.usuario));
+
+  console.log("Token salvo:", data.token);
+
   location.reload();
 }

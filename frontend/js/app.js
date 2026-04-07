@@ -1,9 +1,29 @@
-let aba = "dashboard";
+const state = {
+  aba: "dashboard",
+  user: JSON.parse(localStorage.getItem("usuario") || "{}")
+};
 
-function getHeaders() {
-  return {
-    Authorization: "Bearer " + localStorage.getItem("token")
-  };
+function apiFetch(url, options = {}) {
+  return fetch(url, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  }).then(async res => {
+    if (!res.ok) {
+      const erro = await res.json().catch(() => ({}));
+      alert(erro.erro || "Erro");
+
+      if (res.status === 401) {
+        localStorage.clear();
+        location.reload();
+      }
+
+      throw new Error("Erro API");
+    }
+    return res.json();
+  });
 }
 
 function render(html) {
@@ -18,15 +38,15 @@ function telaSupervisor() {
       <div style="width:220px;background:#111;color:#fff;height:100vh;padding:20px">
         <h2>Maxi Inspect</h2>
 
-        <button onclick="setAba('dashboard')">Dashboard</button><br><br>
-        <button onclick="setAba('trades')">Trades</button><br><br>
-        <button onclick="setAba('criar')">Criar Trade</button><br><br>
-        <button onclick="setAba('lojas')">Lojas</button><br><br>
-        <button onclick="setAba('pontos')">Pontos</button>
+        <button class="menu-btn" onclick="setAba('dashboard')">Dashboard</button>
+        <button class="menu-btn" onclick="setAba('trades')">Trades</button>
+        <button class="menu-btn" onclick="setAba('criar')">Criar Trade</button>
+        <button class="menu-btn" onclick="setAba('lojas')">Lojas</button>
+        <button class="menu-btn" onclick="setAba('pontos')">Pontos</button>
       </div>
 
       <div style="flex:1;padding:20px">
-        <h1>${aba.toUpperCase()}</h1>
+        <h1>${state.aba.toUpperCase()}</h1>
         <div id="conteudo"></div>
       </div>
 
@@ -35,24 +55,23 @@ function telaSupervisor() {
 }
 
 function setAba(novaAba) {
-  aba = novaAba;
+  state.aba = novaAba;
   render(telaSupervisor());
   carregarConteudo();
 }
 
 // ================= CONTROLADOR =================
 function carregarConteudo() {
-  if (aba === "dashboard") carregarDashboard();
-  if (aba === "trades") carregarTrades();
-  if (aba === "criar") telaCriarTrade();
-  if (aba === "lojas") telaLojas();
-  if (aba === "pontos") telaPontos();
+  if (state.aba === "dashboard") carregarDashboard();
+  if (state.aba === "trades") carregarTrades();
+  if (state.aba === "criar") telaCriarTrade();
+  if (state.aba === "lojas") telaLojas();
+  if (state.aba === "pontos") telaPontos();
 }
 
 // ================= DASHBOARD =================
 async function carregarDashboard() {
-  const res = await fetch(`${API}/trades`, { headers: getHeaders() });
-  const data = await res.json();
+  const data = await apiFetch(`${API}/trades`);
 
   let pendente = 0, andamento = 0, finalizado = 0;
 
@@ -71,8 +90,7 @@ async function carregarDashboard() {
 
 // ================= TRADES =================
 async function carregarTrades() {
-  const res = await fetch(`${API}/trades`, { headers: getHeaders() });
-  const data = await res.json();
+  const data = await apiFetch(`${API}/trades`);
 
   document.getElementById("conteudo").innerHTML = data.map(t => {
     let status = "Pendente";
@@ -126,9 +144,8 @@ async function criarTrade() {
 
   if (file) formData.append("imagem", file);
 
-  await fetch(`${API}/trades`, {
+  await apiFetch(`${API}/trades`, {
     method: "POST",
-    headers: getHeaders(),
     body: formData
   });
 
@@ -152,12 +169,9 @@ function telaLojas() {
 async function criarLoja() {
   const nome = document.getElementById("nomeLoja").value;
 
-  await fetch(`${API}/lojas`, {
+  await apiFetch(`${API}/lojas`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getHeaders()
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nome })
   });
 
@@ -165,8 +179,7 @@ async function criarLoja() {
 }
 
 async function carregarLojas() {
-  const res = await fetch(`${API}/lojas`);
-  const data = await res.json();
+  const data = await apiFetch(`${API}/lojas`);
 
   document.getElementById("listaLojas").innerHTML =
     data.map(l => `<div>${l.nome}</div>`).join("");
@@ -174,8 +187,7 @@ async function carregarLojas() {
 
 // ================= SELECT LOJAS =================
 async function carregarLojasSelect() {
-  const res = await fetch(`${API}/lojas`);
-  const lojas = await res.json();
+  const lojas = await apiFetch(`${API}/lojas`);
 
   document.getElementById("lojaSelect").innerHTML =
     lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join("");
@@ -207,8 +219,7 @@ function telaPontos() {
 }
 
 async function carregarLojasParaPonto() {
-  const res = await fetch(`${API}/lojas`);
-  const lojas = await res.json();
+  const lojas = await apiFetch(`${API}/lojas`);
 
   document.getElementById("lojaPonto").innerHTML =
     lojas.map(l => `<option value="${l.id}">${l.nome}</option>`).join("");
@@ -219,12 +230,9 @@ async function criarPonto() {
   const tipo = document.getElementById("tipoPonto").value;
   const loja_id = document.getElementById("lojaPonto").value;
 
-  await fetch(`${API}/pontos`, {
+  await apiFetch(`${API}/pontos`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...getHeaders()
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ nome, tipo, loja_id })
   });
 
@@ -233,17 +241,15 @@ async function criarPonto() {
 
 // ================= AÇÕES =================
 async function aprovar(id) {
-  await fetch(`${API}/trades/aprovar-supervisor/${id}`, {
-    method: "PUT",
-    headers: getHeaders()
+  await apiFetch(`${API}/trades/aprovar-supervisor/${id}`, {
+    method: "PUT"
   });
   carregarTrades();
 }
 
 async function reprovar(id) {
-  await fetch(`${API}/trades/reprovar/${id}`, {
-    method: "PUT",
-    headers: getHeaders()
+  await apiFetch(`${API}/trades/reprovar/${id}`, {
+    method: "PUT"
   });
   carregarTrades();
 }

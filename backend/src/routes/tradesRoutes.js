@@ -4,10 +4,51 @@ const router = express.Router();
 const controller = require('../controllers/tradesController');
 const upload = require('../config/upload');
 
-router.get('/', controller.listar);
-router.post('/', upload.single('imagem'), controller.criar);
-router.put('/aprovar-industria/:id', controller.aprovarIndustria);
-router.put('/aprovar-supervisor/:id', controller.aprovarSupervisor);
-router.put('/reprovar/:id', controller.reprovar);
+const { verificarToken, verificarRole } = require('../middlewares/authMiddleware');
+
+// =========================================
+// ROTAS PROTEGIDAS
+// =========================================
+
+// LISTAR TRADES (Supervisor / Indústria)
+router.get(
+  '/',
+  verificarToken,
+  verificarRole(['SUPERVISOR', 'INDUSTRIA']),
+  controller.listar
+);
+
+// CRIAR TRADE (Supervisor)
+router.post(
+  '/',
+  verificarToken,
+  verificarRole(['SUPERVISOR']),
+  upload.single('imagem'),
+  controller.criar
+);
+
+// APROVAR INDUSTRIA
+router.put(
+  '/aprovar-industria/:id',
+  verificarToken,
+  verificarRole(['INDUSTRIA']),
+  controller.aprovarIndustria
+);
+
+// APROVAR SUPERVISOR
+router.put(
+  '/aprovar-supervisor/:id',
+  verificarToken,
+  verificarRole(['SUPERVISOR']),
+  controller.aprovarSupervisor
+);
+
+// REPROVAR (Supervisor + Indústria)
+router.put(
+  '/reprovar/:id',
+  verificarToken,
+  verificarRole(['SUPERVISOR', 'INDUSTRIA']),
+  controller.reprovar
+);
 
 module.exports = router;
